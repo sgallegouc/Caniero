@@ -1,0 +1,9 @@
+Component physics_reasoner
+{
+    Communications
+    {
+    };
+    language python;
+    options dsr;
+};
+

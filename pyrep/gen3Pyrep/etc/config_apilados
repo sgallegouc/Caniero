@@ -1,0 +1,24 @@
+# Endpoints for implements interfaces
+CameraRGBDSimple.Endpoints=tcp -p 10096
+KinovaArm.Endpoints=tcp -p 10013
+OmniRobot.Endpoints=tcp -p 10004
+CoppeliaUtils.Endpoints = tcp -p 10666
+
+
+# file_name = /home/pbustos/robocomp/components/manipulation_kinova_gen3/etc/gen3-robolab-2.ttt
+file_name = /home/robocomp/robocomp/components/manipulation_kinova_gen3/etc/kinova_env_dani_bloquesApilados.ttt
+
+
+# Endpoints for subscriptions interfaces
+JoystickAdapterTopic.Endpoints=tcp -p 13100
+
+# This property is used by the clients to connect to IceStorm.
+TopicManager.Proxy=IceStorm/TopicManager:default -p 9999
+
+Ice.MessageSizeMax=20004800
+Ice.Warn.Connections=0
+Ice.Trace.Network=0
+Ice.Trace.Protocol=0
+
+
+

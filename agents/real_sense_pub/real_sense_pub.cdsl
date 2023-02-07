@@ -1,0 +1,11 @@
+import "CameraRGBDSimple.idsl";
+Component real_sense_pub
+{
+    Communications
+    {
+        requires CameraRGBDSimple;
+    };
+    language python;
+    options dsr;
+};
+

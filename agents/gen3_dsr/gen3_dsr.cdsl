@@ -1,0 +1,9 @@
+Component gen3_dsr
+{
+    Communications
+    {
+    };
+    language python;
+    options dsr;
+};
+

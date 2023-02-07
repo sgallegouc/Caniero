@@ -1,0 +1,9 @@
+Component hand_detector
+{
+    Communications
+    {
+    };
+    language python;
+    options dsr;
+};
+

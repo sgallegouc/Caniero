@@ -1,0 +1,9 @@
+Component sim_handler
+{
+    Communications
+    {
+    };
+    language python;
+    options dsr;
+};
+

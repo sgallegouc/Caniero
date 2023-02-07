@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>guiDlg</class>
+ <widget class="QWidget" name="guiDlg">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>702</width>
+    <height>877</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>camera_kinova</string>
+  </property>
+  <widget class="QLabel" name="color">
+   <property name="geometry">
+    <rect>
+     <x>5</x>
+     <y>5</y>
+     <width>640</width>
+     <height>480</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Color space</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="depth">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>550</y>
+     <width>480</width>
+     <height>270</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Depth space</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

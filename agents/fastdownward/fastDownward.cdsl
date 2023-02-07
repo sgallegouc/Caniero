@@ -1,0 +1,9 @@
+Component fastDownward
+{
+    Communications
+    {
+    };
+    language python;
+    options dsr;
+};
+

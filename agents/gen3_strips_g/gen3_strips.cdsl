@@ -1,0 +1,10 @@
+Component gen3_strips
+{
+    Communications
+    {
+    };
+    language python;
+    gui Qt(QWidget);
+    options dsr;
+};
+

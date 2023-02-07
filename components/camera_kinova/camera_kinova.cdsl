@@ -1,0 +1,12 @@
+import "CameraRGBDSimple.idsl";
+
+Component camera_kinova
+{
+    Communications
+    {
+        implements CameraRGBDSimple;
+    };
+    language python;
+    gui Qt(QMainWindow);
+};
+

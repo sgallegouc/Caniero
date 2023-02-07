@@ -1,0 +1,13 @@
+# Proxies for required interfaces
+CameraRGBDSimpleProxy = camerargbdsimple:tcp -h localhost -p 10096
+CoppeliaUtilsProxy = coppeliautils:tcp -h localhost -p 10666
+KinovaArmProxy = kinovaarm:tcp -h localhost -p 10013
+
+
+Ice.Warn.Connections=0
+Ice.Trace.Network=0
+Ice.Trace.Protocol=0
+Ice.MessageSizeMax=20004800
+
+
+

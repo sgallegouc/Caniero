@@ -1,0 +1,9 @@
+Component gen3_mission_control
+{
+    Communications
+    {
+    };
+    language python;
+    options dsr;
+};
+
