@@ -11,6 +11,8 @@ Ice.loadSlice("-I ./src/ --all ./src/CoppeliaUtils.ice")
 import RoboCompCoppeliaUtils
 Ice.loadSlice("-I ./src/ --all ./src/KinovaArm.ice")
 import RoboCompKinovaArm
+Ice.loadSlice("-I ./src/ --all ./src/YoloObjects.ice")
+import RoboCompYoloObjects
 
 class ImgType(list):
     def __init__(self, iterable=list()):
@@ -66,6 +68,78 @@ class PointsType(list):
         super(PointsType, self).insert(index, item)
 
 setattr(RoboCompCameraRGBDSimple, "PointsType", PointsType)
+class TObjects(list):
+    def __init__(self, iterable=list()):
+        super(TObjects, self).__init__(iterable)
+
+    def append(self, item):
+        assert isinstance(item, RoboCompYoloObjects.TBox)
+        super(TObjects, self).append(item)
+
+    def extend(self, iterable):
+        for item in iterable:
+            assert isinstance(item, RoboCompYoloObjects.TBox)
+        super(TObjects, self).extend(iterable)
+
+    def insert(self, index, item):
+        assert isinstance(item, RoboCompYoloObjects.TBox)
+        super(TObjects, self).insert(index, item)
+
+setattr(RoboCompYoloObjects, "TObjects", TObjects)
+class TObjectNames(list):
+    def __init__(self, iterable=list()):
+        super(TObjectNames, self).__init__(iterable)
+
+    def append(self, item):
+        assert isinstance(item, str)
+        super(TObjectNames, self).append(item)
+
+    def extend(self, iterable):
+        for item in iterable:
+            assert isinstance(item, str)
+        super(TObjectNames, self).extend(iterable)
+
+    def insert(self, index, item):
+        assert isinstance(item, str)
+        super(TObjectNames, self).insert(index, item)
+
+setattr(RoboCompYoloObjects, "TObjectNames", TObjectNames)
+class TPeople(list):
+    def __init__(self, iterable=list()):
+        super(TPeople, self).__init__(iterable)
+
+    def append(self, item):
+        assert isinstance(item, RoboCompYoloObjects.TPerson)
+        super(TPeople, self).append(item)
+
+    def extend(self, iterable):
+        for item in iterable:
+            assert isinstance(item, RoboCompYoloObjects.TPerson)
+        super(TPeople, self).extend(iterable)
+
+    def insert(self, index, item):
+        assert isinstance(item, RoboCompYoloObjects.TPerson)
+        super(TPeople, self).insert(index, item)
+
+setattr(RoboCompYoloObjects, "TPeople", TPeople)
+class TConnections(list):
+    def __init__(self, iterable=list()):
+        super(TConnections, self).__init__(iterable)
+
+    def append(self, item):
+        assert isinstance(item, RoboCompYoloObjects.TConnection)
+        super(TConnections, self).append(item)
+
+    def extend(self, iterable):
+        for item in iterable:
+            assert isinstance(item, RoboCompYoloObjects.TConnection)
+        super(TConnections, self).extend(iterable)
+
+    def insert(self, index, item):
+        assert isinstance(item, RoboCompYoloObjects.TConnection)
+        super(TConnections, self).insert(index, item)
+
+setattr(RoboCompYoloObjects, "TConnections", TConnections)
 
 
 
@@ -111,6 +185,8 @@ class Requires:
         self.CoppeliaUtils = self.create_proxy("CoppeliaUtilsProxy", RoboCompCoppeliaUtils.CoppeliaUtilsPrx)
 
         self.KinovaArm = self.create_proxy("KinovaArmProxy", RoboCompKinovaArm.KinovaArmPrx)
+
+        self.YoloObjects = self.create_proxy("YoloObjectsProxy", RoboCompYoloObjects.YoloObjectsPrx)
 
     def get_proxies_map(self):
         return self.mprx

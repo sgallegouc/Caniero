@@ -3,4 +3,4 @@ PROJECT(  gen3controller )
 
 INCLUDE( /opt/robocomp/cmake/robocomp.cmake )
 
-ROBOCOMP_IDSL_TO_ICE( CommonBehavior CameraRGBDSimple CoppeliaUtils KinovaArm )
+ROBOCOMP_IDSL_TO_ICE( CommonBehavior CameraRGBDSimple CoppeliaUtils KinovaArm YoloObjects )

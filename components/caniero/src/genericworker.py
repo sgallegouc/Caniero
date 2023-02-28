@@ -50,6 +50,7 @@ class GenericWorker(QtWidgets.QMainWindow):
         self.camerargbdsimple_proxy = mprx["CameraRGBDSimpleProxy"]
         self.coppeliautils_proxy = mprx["CoppeliaUtilsProxy"]
         self.kinovaarm_proxy = mprx["KinovaArmProxy"]
+        self.yoloobjects_proxy = mprx["YoloObjectsProxy"]
 
         self.ui = Ui_guiDlg()
         self.ui.setupUi(self)

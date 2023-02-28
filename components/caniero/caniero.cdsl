@@ -1,12 +1,13 @@
 import "CameraRGBDSimple.idsl";
 import "KinovaArm.idsl";
 import "CoppeliaUtils.idsl";
+import "YoloObjects.idsl";
 
 Component gen3controller
 {
     Communications
     {
-        requires CameraRGBDSimple, KinovaArm, CoppeliaUtils;
+        requires CameraRGBDSimple, KinovaArm, CoppeliaUtils, YoloObjects;
     };
     language python;
     gui Qt(QMainWindow);

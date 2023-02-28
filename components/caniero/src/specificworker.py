@@ -34,6 +34,7 @@ class SpecificWorker(GenericWorker):
     def __init__(self, proxy_map, startup_check=False):
         super(SpecificWorker, self).__init__(proxy_map)
         self.Period = 100
+        self.state = 'searching'
         if startup_check:
             self.startup_check()
         else:
@@ -55,17 +56,47 @@ class SpecificWorker(GenericWorker):
     @QtCore.Slot()
     def compute(self):
         #print('SpecificWorker.compute...')
-        try:
-            color, depth, all = self.read_camera("camera_arm")
-            color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
-            cv2.imshow("", color)
-            cv2.waitKey(1)
-        except Ice.Exception as e:
-          traceback.print_exc()
-          print(e)
+        color, depth, all = self.read_camera("camera_arm")
+        color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
+        cv2.imshow("", color)
+        cv2.waitKey(1)
+       #results = self.read_yolo()
 
+
+
+        # Implementamos el switch de estados utilizando un condicional if-elif
+        if self.state == 'searching':
+            # Lógica para buscar el objeto
+            if self.searching():
+                state = 'approaching'
+
+        elif self.state == 'approaching':
+            # Lógica para acercarse al objeto
+            if self.approaching():
+                state = 'catching'
+
+        elif self.state == 'catching':
+            # Lógica para agarrar el objeto
+            if self.catching():
+                state = 'Putin'
 
         return True
+    def searching(self):
+        pass
+       # for r in :
+        #    if r[0] == 'vaso':
+                # Si encontramos el vaso, retornamos True
+         #       return True
+
+        # Si no encontramos el vaso, retornamos False
+        return False
+
+    def approaching(self):
+        pass
+
+    def catching(self):
+        pass
+
 
     def read_camera(self, camera_name):
         try:
@@ -76,6 +107,11 @@ class SpecificWorker(GenericWorker):
             traceback.print_exc()
             print(e)
         return color, depth, all
+
+
+    def read_yolo(self):
+        pass
+
 
     def startup_check(self):
         print(f"Testing RoboCompCameraRGBDSimple.Point3D from ifaces.RoboCompCameraRGBDSimple")
