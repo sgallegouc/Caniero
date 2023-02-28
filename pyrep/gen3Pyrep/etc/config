@@ -6,7 +6,7 @@ CoppeliaUtils.Endpoints = tcp -p 10666
 
 
 # file_name = /home/pbustos/robocomp/components/manipulation_kinova_gen3/etc/gen3-robolab-2.ttt
-file_name = /home/robocomp/robocomp/components/manipulation_kinova_gen3/etc/kinova_env_dani.ttt
+file_name = /home/robocomp/robocomp/components/manipulation_kinova_gen3/etc/kinova_caniero.ttt
 
 
 # Endpoints for subscriptions interfaces
