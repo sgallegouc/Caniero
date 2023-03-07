@@ -60,23 +60,23 @@ class SpecificWorker(GenericWorker):
         color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
         cv2.imshow("", color)
         cv2.waitKey(1)
-       #results = self.read_yolo()
+        results = self.read_yolo()
 
 
 
-        # Implementamos el switch de estados utilizando un condicional if-elif
+        # Implementamos el switch de estados
         if self.state == 'searching':
-            # Lógica para buscar el objeto
+            # buscar el objeto
             if self.searching():
                 state = 'approaching'
 
         elif self.state == 'approaching':
-            # Lógica para acercarse al objeto
+            # acercarse al objeto
             if self.approaching():
                 state = 'catching'
 
         elif self.state == 'catching':
-            # Lógica para agarrar el objeto
+            # agarrar el objeto
             if self.catching():
                 state = 'Putin'
 
@@ -109,9 +109,130 @@ class SpecificWorker(GenericWorker):
         return color, depth, all
 
 
-    def read_yolo(self):
-        pass
+    def read_yolo(self, camera):
+        # get list of object's names from YOLO
+        try:
+            yolo_object_names = yoloobjects_proxy.getYoloObjectNames()
+        except Ice.Exception as e:
+            print(str(e) + " Error connecting with YoloObjects interface to retrieve names")
+        else:
+            COLORS = np.zeros((80,3))
+            COLORS[:80] = ([[0.000, 0.447, 0.741],
+                           [0.850, 0.325, 0.098],
+                           [0.929, 0.694, 0.125],
+                           [0.494, 0.184, 0.556],
+                           [0.466, 0.674, 0.188],
+                           [0.301, 0.745, 0.933],
+                           [0.635, 0.078, 0.184],
+                           [0.300, 0.300, 0.300],
+                           [0.600, 0.600, 0.600],
+                           [1.000, 0.000, 0.000],
+                           [1.000, 0.500, 0.000],
+                           [0.749, 0.749, 0.000],
+                           [0.000, 1.000, 0.000],
+                           [0.000, 0.000, 1.000],
+                           [0.667, 0.000, 1.000],
+                           [0.333, 0.333, 0.000],
+                           [0.333, 0.667, 0.000],
+                           [0.333, 1.000, 0.000],
+                           [0.667, 0.333, 0.000],
+                           [0.667, 0.667, 0.000],
+                           [0.667, 1.000, 0.000],
+                           [1.000, 0.333, 0.000],
+                           [1.000, 0.667, 0.000],
+                           [1.000, 1.000, 0.000],
+                           [0.000, 0.333, 0.500],
+                           [0.000, 0.667, 0.500],
+                           [0.000, 1.000, 0.500],
+                           [0.333, 0.000, 0.500],
+                           [0.333, 0.333, 0.500],
+                           [0.333, 0.667, 0.500],
+                           [0.333, 1.000, 0.500],
+                           [0.667, 0.000, 0.500],
+                           [0.667, 0.333, 0.500],
+                           [0.667, 0.667, 0.500],
+                           [0.667, 1.000, 0.500],
+                           [1.000, 0.000, 0.500],
+                           [1.000, 0.333, 0.500],
+                           [1.000, 0.667, 0.500],
+                           [1.000, 1.000, 0.500],
+                           [0.000, 0.333, 1.000],
+                           [0.000, 0.667, 1.000],
+                           [0.000, 1.000, 1.000],
+                           [0.333, 0.000, 1.000],
+                           [0.333, 0.333, 1.000],
+                           [0.333, 0.667, 1.000],
+                           [0.333, 1.000, 1.000],
+                           [0.667, 0.000, 1.000],
+                           [0.667, 0.333, 1.000],
+                           [0.667, 0.667, 1.000],
+                           [0.667, 1.000, 1.000],
+                           [1.000, 0.000, 1.000],
+                           [1.000, 0.333, 1.000],
+                           [1.000, 0.667, 1.000],
+                           [0.333, 0.000, 0.000],
+                           [0.500, 0.000, 0.000],
+                           [0.667, 0.000, 0.000],
+                           [0.833, 0.000, 0.000],
+                           [1.000, 0.000, 0.000],
+                           [0.000, 0.167, 0.000],
+                           [0.000, 0.333, 0.000],
+                           [0.000, 0.500, 0.000],
+                           [0.000, 0.667, 0.000],
+                           [0.000, 0.833, 0.000],
+                           [0.000, 1.000, 0.000],
+                           [0.000, 0.000, 0.167],
+                           [0.000, 0.000, 0.333],
+                           [0.000, 0.000, 0.500],
+                           [0.000, 0.000, 0.667],
+                           [0.000, 0.000, 0.833],
+                           [0.000, 0.000, 1.000],
+                           [0.000, 0.000, 0.000],
+                           [0.143, 0.143, 0.143],
+                           [0.286, 0.286, 0.286],
+                           [0.429, 0.429, 0.429],
+                           [0.571, 0.571, 0.571],
+                           [0.714, 0.714, 0.714],
+                           [0.857, 0.857, 0.857],
+                           [0.000, 0.447, 0.741],
+                           [0.314, 0.717, 0.741],
+                           [0.50, 0.5, 0]])
+            COLORS *= 255
 
+
+
+
+        #def read_yolo(self, camera):
+
+    # Carga la configuración y los pesos del modelo YOLO
+    #net = darknet.load_net("yolo_cfg_file.cfg", "yolo_weights_file.weights", 0)
+    #meta = darknet.load_meta("yolo_data_file.data")
+
+    #while True:
+        # Captura la imagen de la cámara
+     #   image = camera.getImage()
+
+        # Convierte la imagen de BGR a RGB (necesario para YOLO)
+      #  image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        # Procesa la imagen con el modelo YOLO
+       # detections = darknet.detect(net, meta, image)
+
+        # Imprime los objetos detectados en la imagen
+        #for detection in detections:
+         #   print("Se detectó un objeto:", detection[0].decode())
+
+        # Muestra la imagen con los cuadros delimitadores de los objetos detectados
+        #image = darknet.draw_boxes(detections, image, meta)
+        #cv2.imshow("YOLO Object Detection", image)
+
+        # Espera a que se presione una tecla para salir
+        #if cv2.waitKey(1) & 0xFF == ord('q'):
+         #   break
+
+    # Libera los recursos utilizados
+    #camera.release()
+    #cv2.destroyAllWindows()
 
     def startup_check(self):
         print(f"Testing RoboCompCameraRGBDSimple.Point3D from ifaces.RoboCompCameraRGBDSimple")
