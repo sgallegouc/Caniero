@@ -26,11 +26,18 @@ from genericworker import *
 import interfaces as ifaces
 import traceback
 import numpy as np
+import RoboCompYoloObjects
+import Ice
 
 sys.path.append('/opt/robocomp/lib')
 console = Console(highlight=False)
 
+
+
 class SpecificWorker(GenericWorker):
+
+    
+
     def __init__(self, proxy_map, startup_check=False):
         super(SpecificWorker, self).__init__(proxy_map)
         self.Period = 100
@@ -58,9 +65,15 @@ class SpecificWorker(GenericWorker):
         #print('SpecificWorker.compute...')
         color, depth, all = self.read_camera("camera_arm")
         color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
-        cv2.imshow("", color)
-        cv2.waitKey(1)
-        results = self.read_yolo()
+        results = self.read_yolo(color)
+
+        objects = RoboCompYoloObjects.detect_objects(color)
+
+        cv2.imshow("top", color)
+        cv2.waitKey(5)
+
+        draw_objects_on_2dview(objects, RoboCompYoloObjects.TBox())
+
 
 
 
@@ -108,7 +121,17 @@ class SpecificWorker(GenericWorker):
             print(e)
         return color, depth, all
 
+    def connect_to_yolo(self):
+        # crear el objeto de proxy
+        try:
+            proxy = ic.stringToProxy("YoloObjects:default -p 10000")
+        except Ice.Exception as e:
+            print(str(e) + " Error creating proxy")
 
+        # crear el objeto de YoloObjects utilizando el proxy
+        self.yoloobjects_proxy = yoloobjects.YoloObjectsPrx.checkedCast(proxy)
+        if not self.yoloobjects_proxy:
+            raise RuntimeError("Invalid proxy")
     def read_yolo(self, camera):
         # get list of object's names from YOLO
         try:
@@ -198,7 +221,25 @@ class SpecificWorker(GenericWorker):
                            [0.314, 0.717, 0.741],
                            [0.50, 0.5, 0]])
             COLORS *= 255
+        return COLORS
 
+    def draw_objects_on_2dview(self, objects, selected):
+        items = []
+        for i in items:
+            self.viewer.scene.removeItem(i)
+        items.clear()
+
+        # draw rest
+        for o in objects:
+            c = COLORS[o.type]
+            color = QtGui.QColor(c[2], c[1], c[0])  # BGR
+            item = self.viewer.scene.addRect(-200, -200, 400, 400, QtGui.QPen(color, 20))
+
+            corrected = (self.robot.get_tf_cam_to_base() * np.array([o.x, o.y, o.z, 1.0]))[:2]
+            item.setPos(corrected[0], corrected[1])
+            items.append(item)
+            yolo = self.robot.get_tf_cam_to_base() * np.array([o.x, o.y, o.z, 1.0])
+            # print(__FUNCTION__, corrected[0], corrected[1], yolo[0], yolo[1])
 
 
 
