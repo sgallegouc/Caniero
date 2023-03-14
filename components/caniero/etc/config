@@ -2,6 +2,7 @@
 CameraRGBDSimpleProxy = camerargbdsimple:tcp -h localhost -p 10096
 CoppeliaUtilsProxy = coppeliautils:tcp -h localhost -p 10666
 KinovaArmProxy = kinovaarm:tcp -h localhost -p 10013
+YoloObjectsProxy = yoloobjects:tcp -h localhost -p 10054
 
 
 Ice.Warn.Connections=0

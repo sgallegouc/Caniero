@@ -28,6 +28,7 @@ import traceback
 import numpy as np
 import RoboCompYoloObjects
 import Ice
+import RoboCompKinovaArm
 
 sys.path.append('/opt/robocomp/lib')
 console = Console(highlight=False)
@@ -35,9 +36,6 @@ console = Console(highlight=False)
 
 
 class SpecificWorker(GenericWorker):
-
-    
-
     def __init__(self, proxy_map, startup_check=False):
         super(SpecificWorker, self).__init__(proxy_map)
         self.Period = 100
@@ -45,6 +43,13 @@ class SpecificWorker(GenericWorker):
         if startup_check:
             self.startup_check()
         else:
+
+            try:
+                self.yolo_object_names = self.yoloobjects_proxy.getYoloObjectNames()
+            except Ice.Exception as e:
+                print(str(e) + " Error connecting with YoloObjects interface to retrieve names")
+
+
             self.timer.timeout.connect(self.compute)
             self.timer.start(self.Period)
 
@@ -65,33 +70,60 @@ class SpecificWorker(GenericWorker):
         #print('SpecificWorker.compute...')
         color, depth, all = self.read_camera("camera_arm")
         color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
-        results = self.read_yolo(color)
+        yolo_objects = self.read_yolo(color)
 
-        objects = RoboCompYoloObjects.detect_objects(color)
+        box = None
+        for b in yolo_objects:
+            if self.yolo_object_names[b.type] == "cup":
+                box = b
+                print(self.yolo_object_names[b.type])
+                print(box.x)
+                print(box.y)
+                print(box.z)
+                break
+
+        arm = None
+        while True:
+        #   posición centro vaso x, y, z en el SR de la cámara
+        #   leer la posición de la punta (xp, yp, zp) en el SR de la mesa con kinovaarm_proxy.getToolPosition()
+            xp = self.kinovaarm_proxy[arm.x]
+
+            #yp = self.kinovaarm_proxy.y
+            #zp = self.kinovaarm_proxy.z
+            print(xp)
+
+        #   queremos que x vaya a cero. ¿cuánto hay que añadir a xp para reducir x?
+        #   si asumimos que x y xp tienen el mismo signo entonces
+                # restamos a xp algo proporcional a x
+                # llamamos a kinovaarm_proxy.setToolPosition(oldpose + delta x, base)
+        #    iteramos hasta que x sea próximo a cero.
+            # if proxima a cero break
+
+
 
         cv2.imshow("top", color)
         cv2.waitKey(5)
 
-        draw_objects_on_2dview(objects, RoboCompYoloObjects.TBox())
+        #draw_objects_on_2dview(objects, RoboCompYoloObjects.TBox())
 
 
 
 
-        # Implementamos el switch de estados
-        if self.state == 'searching':
-            # buscar el objeto
-            if self.searching():
-                state = 'approaching'
-
-        elif self.state == 'approaching':
-            # acercarse al objeto
-            if self.approaching():
-                state = 'catching'
-
-        elif self.state == 'catching':
-            # agarrar el objeto
-            if self.catching():
-                state = 'Putin'
+        # # Implementamos el switch de estados
+        # if self.state == 'searching':
+        #     # buscar el objeto
+        #     if self.searching():
+        #         state = 'approaching'
+        #
+        # elif self.state == 'approaching':
+        #     # acercarse al objeto
+        #     if self.approaching():
+        #         state = 'catching'
+        #
+        # elif self.state == 'catching':
+        #     # agarrar el objeto
+        #     if self.catching():
+        #         state = 'Putin'
 
         return True
     def searching(self):
@@ -124,104 +156,25 @@ class SpecificWorker(GenericWorker):
     def connect_to_yolo(self):
         # crear el objeto de proxy
         try:
-            proxy = ic.stringToProxy("YoloObjects:default -p 10000")
+            proxy = self.stringToProxy("YoloObjects:default -p 10000")
         except Ice.Exception as e:
             print(str(e) + " Error creating proxy")
 
         # crear el objeto de YoloObjects utilizando el proxy
-        self.yoloobjects_proxy = yoloobjects.YoloObjectsPrx.checkedCast(proxy)
-        if not self.yoloobjects_proxy:
+        yoloobjects_proxy = RoboCompYoloObjects.YoloObjectsPrx.checkedCast(proxy)
+        if not yoloobjects_proxy:
             raise RuntimeError("Invalid proxy")
-    def read_yolo(self, camera):
+        return yoloobjects_proxy
+    def read_yolo(self, frame):
         # get list of object's names from YOLO
         try:
-            yolo_object_names = yoloobjects_proxy.getYoloObjectNames()
+            yolo_objects = self.yoloobjects_proxy.getYoloObjects()
+            #print(yolo_objects)
+            #pintar
+            return yolo_objects.objects
         except Ice.Exception as e:
             print(str(e) + " Error connecting with YoloObjects interface to retrieve names")
-        else:
-            COLORS = np.zeros((80,3))
-            COLORS[:80] = ([[0.000, 0.447, 0.741],
-                           [0.850, 0.325, 0.098],
-                           [0.929, 0.694, 0.125],
-                           [0.494, 0.184, 0.556],
-                           [0.466, 0.674, 0.188],
-                           [0.301, 0.745, 0.933],
-                           [0.635, 0.078, 0.184],
-                           [0.300, 0.300, 0.300],
-                           [0.600, 0.600, 0.600],
-                           [1.000, 0.000, 0.000],
-                           [1.000, 0.500, 0.000],
-                           [0.749, 0.749, 0.000],
-                           [0.000, 1.000, 0.000],
-                           [0.000, 0.000, 1.000],
-                           [0.667, 0.000, 1.000],
-                           [0.333, 0.333, 0.000],
-                           [0.333, 0.667, 0.000],
-                           [0.333, 1.000, 0.000],
-                           [0.667, 0.333, 0.000],
-                           [0.667, 0.667, 0.000],
-                           [0.667, 1.000, 0.000],
-                           [1.000, 0.333, 0.000],
-                           [1.000, 0.667, 0.000],
-                           [1.000, 1.000, 0.000],
-                           [0.000, 0.333, 0.500],
-                           [0.000, 0.667, 0.500],
-                           [0.000, 1.000, 0.500],
-                           [0.333, 0.000, 0.500],
-                           [0.333, 0.333, 0.500],
-                           [0.333, 0.667, 0.500],
-                           [0.333, 1.000, 0.500],
-                           [0.667, 0.000, 0.500],
-                           [0.667, 0.333, 0.500],
-                           [0.667, 0.667, 0.500],
-                           [0.667, 1.000, 0.500],
-                           [1.000, 0.000, 0.500],
-                           [1.000, 0.333, 0.500],
-                           [1.000, 0.667, 0.500],
-                           [1.000, 1.000, 0.500],
-                           [0.000, 0.333, 1.000],
-                           [0.000, 0.667, 1.000],
-                           [0.000, 1.000, 1.000],
-                           [0.333, 0.000, 1.000],
-                           [0.333, 0.333, 1.000],
-                           [0.333, 0.667, 1.000],
-                           [0.333, 1.000, 1.000],
-                           [0.667, 0.000, 1.000],
-                           [0.667, 0.333, 1.000],
-                           [0.667, 0.667, 1.000],
-                           [0.667, 1.000, 1.000],
-                           [1.000, 0.000, 1.000],
-                           [1.000, 0.333, 1.000],
-                           [1.000, 0.667, 1.000],
-                           [0.333, 0.000, 0.000],
-                           [0.500, 0.000, 0.000],
-                           [0.667, 0.000, 0.000],
-                           [0.833, 0.000, 0.000],
-                           [1.000, 0.000, 0.000],
-                           [0.000, 0.167, 0.000],
-                           [0.000, 0.333, 0.000],
-                           [0.000, 0.500, 0.000],
-                           [0.000, 0.667, 0.000],
-                           [0.000, 0.833, 0.000],
-                           [0.000, 1.000, 0.000],
-                           [0.000, 0.000, 0.167],
-                           [0.000, 0.000, 0.333],
-                           [0.000, 0.000, 0.500],
-                           [0.000, 0.000, 0.667],
-                           [0.000, 0.000, 0.833],
-                           [0.000, 0.000, 1.000],
-                           [0.000, 0.000, 0.000],
-                           [0.143, 0.143, 0.143],
-                           [0.286, 0.286, 0.286],
-                           [0.429, 0.429, 0.429],
-                           [0.571, 0.571, 0.571],
-                           [0.714, 0.714, 0.714],
-                           [0.857, 0.857, 0.857],
-                           [0.000, 0.447, 0.741],
-                           [0.314, 0.717, 0.741],
-                           [0.50, 0.5, 0]])
-            COLORS *= 255
-        return COLORS
+        return []
 
     def draw_objects_on_2dview(self, objects, selected):
         items = []
