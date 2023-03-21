@@ -72,60 +72,82 @@ class SpecificWorker(GenericWorker):
         color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
         yolo_objects = self.read_yolo(color)
 
-        box = None
-        for b in yolo_objects:
-            if self.yolo_object_names[b.type] == "cup":
-                box = b
-                print(self.yolo_object_names[b.type])
-                print(box.x)
-                print(box.y)
-                print(box.z)
-                break
+        fin = False
+        agarrar = False
+        cup = self.select_cup(yolo_objects, color)
+        if not fin:
+            if cup is not None:
+                fin = self.aproximar(cup)
+            else:
+                print("Cup not seen")
+        else:
+            print("Objetivo alcanzado")
 
-        arm = None
-        while True:
-        #   posición centro vaso x, y, z en el SR de la cámara
-        #   leer la posición de la punta (xp, yp, zp) en el SR de la mesa con kinovaarm_proxy.getToolPosition()
-            xp = self.kinovaarm_proxy[arm.x]
-
-            #yp = self.kinovaarm_proxy.y
-            #zp = self.kinovaarm_proxy.z
-            print(xp)
-
-        #   queremos que x vaya a cero. ¿cuánto hay que añadir a xp para reducir x?
-        #   si asumimos que x y xp tienen el mismo signo entonces
-                # restamos a xp algo proporcional a x
-                # llamamos a kinovaarm_proxy.setToolPosition(oldpose + delta x, base)
-        #    iteramos hasta que x sea próximo a cero.
-            # if proxima a cero break
+            # if not agarrar:
+            #     agarrar = self.gripper()
+            # else:
+            #     print("vaso agarrado")
 
 
 
+        # Drawing cross on the webcam feed
+        width, height, _ = color.shape
+        cv2.line(color, (width//2, 0), (width//2, height), (0, 0, 255), 1)
+        cv2.line(color, (0, height//2), (width, height//2), (0, 0, 255), 1)
         cv2.imshow("top", color)
         cv2.waitKey(5)
 
         #draw_objects_on_2dview(objects, RoboCompYoloObjects.TBox())
 
+    def aproximar(self, box):
 
+        print(box.x, box.z)
+        # condición de salida
+        if abs(box.x) < 10 and abs(box.z) < 10:
+            return True
 
+        # Obtener la posición actual del brazo
+        try:
+            current_pose = self.kinovaarm_proxy.getCenterOfTool(RoboCompKinovaArm.ArmJoints.base)
+        except Ice.Exception as e:
+            print(str(e) + " Error connecting with Kinova Arm")
 
-        # # Implementamos el switch de estados
-        # if self.state == 'searching':
-        #     # buscar el objeto
-        #     if self.searching():
-        #         state = 'approaching'
-        #
-        # elif self.state == 'approaching':
-        #     # acercarse al objeto
-        #     if self.approaching():
-        #         state = 'catching'
-        #
-        # elif self.state == 'catching':
-        #     # agarrar el objeto
-        #     if self.catching():
-        #         state = 'Putin'
+        print("Box:", box.x, "Hand:", current_pose.x)
+        if box.x > 0:
+            offset_x = -10
+        else:
+            offset_x = 10
+        if box.z > 0:
+            offset_y = -10
+        else:
+            offset_y = 10
 
-        return True
+        new_pose = current_pose
+        new_pose.x += offset_x
+        new_pose.y += offset_y
+
+        # movemos el brazo
+        try:
+            self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
+        except Ice.Exception as e:
+            print(str(e) + " Error connecting with Kinova Arm")
+
+    def select_cup(self, yolo_objects, frame):
+        box = None
+        for b in yolo_objects:
+            if self.yolo_object_names[b.type] == "cup":
+                box = b
+                break
+
+        if box is not None:
+            cv2.rectangle(frame, (box.left, box.top), (box.right, box.bot), (255, 0, 0), 2)
+        return box
+
+    def gripper(self):
+        #condicion de salida
+        gripper = self.kinovaarm_proxy.getGripperState()
+        print (gripper.distance)
+
     def searching(self):
         pass
        # for r in :
