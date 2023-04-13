@@ -49,7 +49,6 @@ class SpecificWorker(GenericWorker):
             except Ice.Exception as e:
                 print(str(e) + " Error connecting with YoloObjects interface to retrieve names")
 
-
             self.timer.timeout.connect(self.compute)
             self.timer.start(self.Period)
 
@@ -72,16 +71,23 @@ class SpecificWorker(GenericWorker):
         color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
         yolo_objects = self.read_yolo(color)
 
-        fin = False
         agarrar = False
         cup = self.select_cup(yolo_objects, color)
+        fin = False
+
+
         if not fin:
             if cup is not None:
-                fin = self.aproximar(cup)
-            else:
-                print("Cup not seen")
+                fin = self.encarar(cup)
+                if fin:
+                    fin = False
+                    fin = self.aproximar(cup)
+
+            # else:
+            #     print("Cup not seen")
         else:
             print("Objetivo alcanzado")
+
 
             # if not agarrar:
             #     agarrar = self.gripper()
@@ -99,11 +105,11 @@ class SpecificWorker(GenericWorker):
 
         #draw_objects_on_2dview(objects, RoboCompYoloObjects.TBox())
 
-    def aproximar(self, box):
+    def encarar(self, box):
 
-        print(box.x, box.z)
+        # print(box.x, box.z)
         # condición de salida
-        if abs(box.x) < 10 and abs(box.z) < 10:
+        if abs(box.x) < 2 and abs(box.z) < 25:
             return True
 
         # Obtener la posición actual del brazo
@@ -112,18 +118,50 @@ class SpecificWorker(GenericWorker):
         except Ice.Exception as e:
             print(str(e) + " Error connecting with Kinova Arm")
 
-        print("Box:", box.x, "Hand:", current_pose.x)
-        if box.x > 0:
-            offset_x = -10
-        else:
-            offset_x = 10
-        if box.z > 0:
+        # print("Box--x:", box.x, "Hand:", current_pose.x)
+        # print("Box--z:", box.z, "Hand:", current_pose.z)
+
+        new_pose = current_pose
+        if abs(box.x) > 2:
+            if box.x > 0:
+                offset_x = -2
+            else:
+                offset_x = 2
+            new_pose.x += offset_x
+        if abs(box.z) > 25:
+            if box.z > 0:
+                offset_z = -2
+            else:
+                offset_z = 2
+            new_pose.z += offset_z
+
+        # movemos el brazo
+        try:
+            self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
+        except Ice.Exception as e:
+            print(str(e) + " Error connecting with Kinova Arm")
+
+    def aproximar(self,box):
+        #Condicion de salida
+        if abs(box.y) < 10:
+            return True
+
+        # Obtener la posición actual del brazo
+        try:
+            current_pose = self.kinovaarm_proxy.getCenterOfTool(RoboCompKinovaArm.ArmJoints.base)
+        except Ice.Exception as e:
+            print(str(e) + " Error connecting with Kinova Arm")
+
+        print("Box--y:", box.y, "Hand:", current_pose.y)
+        new_pose = current_pose
+        if abs(box.y) > 0:
             offset_y = -10
         else:
             offset_y = 10
 
-        new_pose = current_pose
-        new_pose.x += offset_x
+        if abs(box.y) < 180:
+            offset_y = -80
+
         new_pose.y += offset_y
 
         # movemos el brazo
