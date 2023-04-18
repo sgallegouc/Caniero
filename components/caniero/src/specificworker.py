@@ -19,6 +19,7 @@
 #    along with RoboComp.  If not, see <http://www.gnu.org/licenses/>.
 #
 import cv2
+from PIL.ImageChops import offset
 from PySide2.QtCore import QTimer
 from PySide2.QtWidgets import QApplication
 from rich.console import Console
@@ -40,6 +41,8 @@ class SpecificWorker(GenericWorker):
         super(SpecificWorker, self).__init__(proxy_map)
         self.Period = 100
         self.state = 'searching'
+        self.estadoMaquina = "encarar"
+        self.estadoUltimoEmpujon = 0
         if startup_check:
             self.startup_check()
         else:
@@ -71,30 +74,30 @@ class SpecificWorker(GenericWorker):
         color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
         yolo_objects = self.read_yolo(color)
 
-        agarrar = False
         cup = self.select_cup(yolo_objects, color)
-        fin = False
 
+        # Obtener la posición actual del brazo
+        try:
+            self.current_pose = self.kinovaarm_proxy.getCenterOfTool(RoboCompKinovaArm.ArmJoints.base)
+        except Ice.Exception as e:
+            print(str(e) + " Error connecting with Kinova Arm")
 
-        if not fin:
+        if self.estadoMaquina == "encarar":
             if cup is not None:
-                fin = self.encarar(cup)
-                if fin:
-                    fin = False
-                    fin = self.aproximar(cup)
+                self.encarar(cup)
+        elif self.estadoMaquina == "aproximar":
+            if cup is not None:
+                self.aproximar(cup)
+        elif self.estadoMaquina == "inicioUltimoEmpujon":
+            self.inicioUltimoEmpujon()
+        elif self.estadoMaquina == "ultimoEmpujon":
+            print("HOLA")
+            self.ultimoEmpujon()
+        elif self.estadoMaquina == "gripper":
+            self.gripper()
 
-            # else:
-            #     print("Cup not seen")
         else:
             print("Objetivo alcanzado")
-
-
-            # if not agarrar:
-            #     agarrar = self.gripper()
-            # else:
-            #     print("vaso agarrado")
-
-
 
         # Drawing cross on the webcam feed
         width, height, _ = color.shape
@@ -110,18 +113,12 @@ class SpecificWorker(GenericWorker):
         # print(box.x, box.z)
         # condición de salida
         if abs(box.x) < 2 and abs(box.z) < 25:
-            return True
+            self.estadoMaquina = "aproximar"
 
-        # Obtener la posición actual del brazo
-        try:
-            current_pose = self.kinovaarm_proxy.getCenterOfTool(RoboCompKinovaArm.ArmJoints.base)
-        except Ice.Exception as e:
-            print(str(e) + " Error connecting with Kinova Arm")
-
-        # print("Box--x:", box.x, "Hand:", current_pose.x)
+        # print("Box--x:", box.x, "Hand:", current_pos e.x)
         # print("Box--z:", box.z, "Hand:", current_pose.z)
 
-        new_pose = current_pose
+        new_pose = self.current_pose
         if abs(box.x) > 2:
             if box.x > 0:
                 offset_x = -2
@@ -142,25 +139,20 @@ class SpecificWorker(GenericWorker):
             print(str(e) + " Error connecting with Kinova Arm")
 
     def aproximar(self,box):
-        #Condicion de salida
-        if abs(box.y) < 10:
-            return True
 
-        # Obtener la posición actual del brazo
-        try:
-            current_pose = self.kinovaarm_proxy.getCenterOfTool(RoboCompKinovaArm.ArmJoints.base)
-        except Ice.Exception as e:
-            print(str(e) + " Error connecting with Kinova Arm")
+        # condición de salida
+        if abs(box.y) < 190:
+            self.estadoMaquina = "inicioUltimoEmpujon"
 
-        print("Box--y:", box.y, "Hand:", current_pose.y)
-        new_pose = current_pose
+        if abs(box.x) >= 2 or abs(box.z) >= 25:
+            self.estadoMaquina = "encarar"
+
+        print("Box--y:", box.y, "Hand:", self.current_pose.y)
+        new_pose = self.current_pose
         if abs(box.y) > 0:
             offset_y = -10
         else:
             offset_y = 10
-
-        if abs(box.y) < 180:
-            offset_y = -80
 
         new_pose.y += offset_y
 
@@ -169,6 +161,46 @@ class SpecificWorker(GenericWorker):
             self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
         except Ice.Exception as e:
             print(str(e) + " Error connecting with Kinova Arm")
+
+    def inicioUltimoEmpujon(self):
+
+        new_pose = self.current_pose
+        self.estadoUltimoEmpujon = self.current_pose.y
+        new_pose.y += -90
+        self.estadoMaquina = "ultimoEmpujon"
+
+        try:
+            self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
+        except Ice.Exception as e:
+            print(str(e) + " Error connecting with Kinova Arm")
+
+    def ultimoEmpujon(self):
+
+        if self.current_pose.y == (self.estadoUltimoEmpujon - 90):
+            self.estadoMaquina = "gripper"
+
+    def gripper(self):
+        #condicion de salida
+        gripper = self.kinovaarm_proxy.getGripperState()
+        self.kinovaarm_proxy.closeGripper()
+        print(gripper.distance)
+
+        new_pose = self.kinovaarm_proxy.getCenterOfTool(RoboCompKinovaArm.ArmJoints.base)
+        new_pose.z += 100
+        self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
+        return True
+
+    def depositar(self):
+
+        try:
+            current_pose = self.kinovaarm_proxy.getCenterOfTool(RoboCompKinovaArm.ArmJoints.base)
+        except Ice.Exception as e:
+            print(str(e) + " Error connecting with Kinova Arm")
+
+        new_pose = current_pose
+        offset_y = 100
+        new_pose.y += offset_y
+        self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
 
     def select_cup(self, yolo_objects, frame):
         box = None
@@ -180,11 +212,6 @@ class SpecificWorker(GenericWorker):
         if box is not None:
             cv2.rectangle(frame, (box.left, box.top), (box.right, box.bot), (255, 0, 0), 2)
         return box
-
-    def gripper(self):
-        #condicion de salida
-        gripper = self.kinovaarm_proxy.getGripperState()
-        print (gripper.distance)
 
     def searching(self):
         pass
