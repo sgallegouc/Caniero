@@ -42,7 +42,7 @@ class SpecificWorker(GenericWorker):
         self.Period = 100
         self.state = 'searching'
         self.estadoMaquina = "encarar"
-        self.estadoUltimoEmpujon = 0
+        self.aux_pose = 0
         if startup_check:
             self.startup_check()
         else:
@@ -91,11 +91,17 @@ class SpecificWorker(GenericWorker):
         elif self.estadoMaquina == "inicioUltimoEmpujon":
             self.inicioUltimoEmpujon()
         elif self.estadoMaquina == "ultimoEmpujon":
-            print("HOLA")
             self.ultimoEmpujon()
-        elif self.estadoMaquina == "gripper":
-            self.gripper()
-
+        elif self.estadoMaquina == "empezarGripper":
+            self.empezarGripper()
+        elif self.estadoMaquina == "acabarGripper":
+            self.acabarGripper()
+        elif self.estadoMaquina == "empezarDepositar":
+            self.empezarDepositar()
+        elif self.estadoMaquina == "acabarDepositar":
+            self.acabarDepositar()
+        elif self.estadoMaquina == "entregarVaso":
+            self.entregarVaso()
         else:
             print("Objetivo alcanzado")
 
@@ -165,8 +171,8 @@ class SpecificWorker(GenericWorker):
     def inicioUltimoEmpujon(self):
 
         new_pose = self.current_pose
-        self.estadoUltimoEmpujon = self.current_pose.y
-        new_pose.y += -90
+        self.aux_pose = self.current_pose.y
+        new_pose.y += -100
         self.estadoMaquina = "ultimoEmpujon"
 
         try:
@@ -176,31 +182,71 @@ class SpecificWorker(GenericWorker):
 
     def ultimoEmpujon(self):
 
-        if self.current_pose.y == (self.estadoUltimoEmpujon - 90):
-            self.estadoMaquina = "gripper"
+        if abs(self.aux_pose - 89) > abs(self.current_pose.y) < abs(self.aux_pose - 91):
+            print("HeECHO")
+            self.estadoMaquina = "empezarGripper"
+        else:
+            try:
+                self.kinovaarm_proxy.setCenterOfTool(self.aux_pose - 90, RoboCompKinovaArm.ArmJoints.base)
+            except Ice.Exception as e:
+                print(str(e) + " Error connecting with Kinova Arm")
 
-    def gripper(self):
-        #condicion de salida
+    def empezarGripper(self):
+
         gripper = self.kinovaarm_proxy.getGripperState()
         self.kinovaarm_proxy.closeGripper()
-        print(gripper.distance)
+        print("gripper distance: " + str(gripper.distance))
+        # print(gripper.lforce)
+        # print(gripper.rforce)
 
-        new_pose = self.kinovaarm_proxy.getCenterOfTool(RoboCompKinovaArm.ArmJoints.base)
-        new_pose.z += 100
+        if gripper.distance < 0.376:
+            self.aux_pose = self.current_pose.z
+            self.estadoMaquina = "acabarGripper"
+
+    def acabarGripper(self):
+
+        new_pose = self.current_pose
+        new_pose.z += 75
+
+        if abs(self.aux_pose + 75) < abs(self.current_pose.z):
+            self.estadoMaquina = "empezarDepositar"
+        else:
+            try:
+                self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
+            except Ice.Exception as e:
+                print(str(e) + " Error connecting with Kinova Arm")
+
+    def empezarDepositar(self):
+
+        new_pose = self.current_pose
+        self.aux_pose = self.current_pose.y
+        new_pose.y += 150
         self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
-        return True
+        self.estadoMaquina = "acabarDepositar"
 
-    def depositar(self):
+    def acabarDepositar(self):
+        print("HELLO")
+        print(self.aux_pose)
+        print(self.current_pose.y)
+        if (self.aux_pose + 150) < self.current_pose.y:
+            self.estadoMaquina = "entregarVaso"
+        else:
+            try:
+                new_pose = self.current_pose
+                new_pose.y += 20
+                self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
+            except Ice.Exception as e:
+                print(str(e) + " Error connecting with Kinova Arm")
 
+    def entregarVaso(self):
         try:
-            current_pose = self.kinovaarm_proxy.getCenterOfTool(RoboCompKinovaArm.ArmJoints.base)
+            new_pose = self.current_pose
+            new_pose.x = -50
+            new_pose.y = -515
+            new_pose.z = 80
+            self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
         except Ice.Exception as e:
             print(str(e) + " Error connecting with Kinova Arm")
-
-        new_pose = current_pose
-        offset_y = 100
-        new_pose.y += offset_y
-        self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
 
     def select_cup(self, yolo_objects, frame):
         box = None
@@ -212,23 +258,6 @@ class SpecificWorker(GenericWorker):
         if box is not None:
             cv2.rectangle(frame, (box.left, box.top), (box.right, box.bot), (255, 0, 0), 2)
         return box
-
-    def searching(self):
-        pass
-       # for r in :
-        #    if r[0] == 'vaso':
-                # Si encontramos el vaso, retornamos True
-         #       return True
-
-        # Si no encontramos el vaso, retornamos False
-        return False
-
-    def approaching(self):
-        pass
-
-    def catching(self):
-        pass
-
 
     def read_camera(self, camera_name):
         try:
