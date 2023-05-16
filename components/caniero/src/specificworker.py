@@ -30,6 +30,7 @@ import numpy as np
 import RoboCompYoloObjects
 import Ice
 import RoboCompKinovaArm
+import time
 
 sys.path.append('/opt/robocomp/lib')
 console = Console(highlight=False)
@@ -43,6 +44,7 @@ class SpecificWorker(GenericWorker):
         self.state = 'searching'
         self.estadoMaquina = "encarar"
         self.aux_pose = 0
+        self.tEspera = 0
         if startup_check:
             self.startup_check()
         else:
@@ -94,6 +96,8 @@ class SpecificWorker(GenericWorker):
             self.ultimoEmpujon()
         elif self.estadoMaquina == "empezarGripper":
             self.empezarGripper()
+        # elif cup is not None:
+        #     self.estadoMaquina = "encarar"
         elif self.estadoMaquina == "acabarGripper":
             self.acabarGripper()
         elif self.estadoMaquina == "empezarDepositar":
@@ -102,6 +106,16 @@ class SpecificWorker(GenericWorker):
             self.acabarDepositar()
         elif self.estadoMaquina == "entregarVaso":
             self.entregarVaso()
+        elif self.estadoMaquina == "iniciarEspera":
+            self.iniciarEspera()
+        elif self.estadoMaquina == "acabarEspera":
+            self.acabarEspera()
+        elif self.estadoMaquina == "servirVaso":
+            self.servirVaso()
+        elif self.estadoMaquina == "devolver":
+            self.devolver()
+        elif self.estadoMaquina == "acabado":
+            self.acabado()
         else:
             print("Objetivo alcanzado")
 
@@ -245,6 +259,64 @@ class SpecificWorker(GenericWorker):
             new_pose.y = -515
             new_pose.z = 80
             self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
+            if self.current_pose.x==-50 and self.current_pose.y==-515 and self.current_pose.z==80:
+                self.estadoMaquina = "iniciarEspera"
+
+        except Ice.Exception as e:
+            print(str(e) + " Error connecting with Kinova Arm")
+
+    def iniciarEspera(self):
+        try:
+            self.tEspera = time.time()
+            self.estadoMaquina = "acabarEspera"
+
+        except Ice.Exception as e:
+            print(str(e) + "Error en el timer")
+
+    def acabarEspera(self):
+        try:
+            tActual = time.time() - 1 - self.tEspera
+            if tActual > 5:
+                self.estadoMaquina = "servirVaso"
+        except Ice.Exception as e:
+            print(str(e) + "Error en el timer")
+
+    def servirVaso(self):
+        try:
+            new_pose = self.current_pose
+            new_pose.x = 400
+            new_pose.y = -600
+            new_pose.z = 92
+            self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
+            if self.current_pose.x == 400 and self.current_pose.y == -600 and self.current_pose.z == 92:
+                self.estadoMaquina = "devolver"
+
+        except Ice.Exception as e:
+            print(str(e) + " Error connecting with Kinova Arm")
+
+    def devolver(self):
+        try:
+            print("HOLA TIO ESTAS EN DEVOLVER")
+            new_pose = self.current_pose
+            new_pose.x = 400
+            new_pose.y = -600
+            new_pose.z = 20
+            self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
+            self.estadoMaquina = "acabado"
+        except Ice.Exception as e:
+            print(str(e) + " Error connecting with Kinova Arm")
+
+    def acabado(self):
+        try:
+            new_pose = self.current_pose
+            new_pose.y = -400
+            print("posicion x:", self.current_pose.x)
+            print("posicion Y:", self.current_pose.y)
+            print("posicion z:", self.current_pose.z)
+            if self.current_pose.x > 398 and abs(self.current_pose.y) > 398 and self.current_pose.z < 21:
+                self.kinovaarm_proxy.openGripper()
+                self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
+                self.estadoMaquina = "fin"
         except Ice.Exception as e:
             print(str(e) + " Error connecting with Kinova Arm")
 
