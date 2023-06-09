@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="d3ffe8cb-e803-443d-95ed-bfc66622141c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/caniero.cdsl" beforeDir="false" afterPath="$PROJECT_DIR$/caniero.cdsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etc/config" beforeDir="false" afterPath="$PROJECT_DIR$/etc/config" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/genericworker.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/genericworker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/interfaces.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/specificworker.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/specificworker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../etc/kinova_caniero.ttt" beforeDir="false" afterPath="$PROJECT_DIR$/../../etc/kinova_caniero.ttt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../pyrep/gen3Pyrep/etc/config" beforeDir="false" afterPath="$PROJECT_DIR$/../../pyrep/gen3Pyrep/etc/config" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../pyrep/gen3Pyrep/src/kinovaarmI.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../pyrep/gen3Pyrep/src/kinovaarmI.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../pyrep/gen3Pyrep/src/specificworker.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../pyrep/gen3Pyrep/src/specificworker.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2N0lVfSL7b0SOIbSxduy4IsJQjw" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "/home/alumno/robocomp/components/manipulation_kinova_gen3/components/caniero",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="d3ffe8cb-e803-443d-95ed-bfc66622141c" name="Changes" comment="" />
+      <created>1678808905144</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1678808905144</updated>
+      <workItem from="1678808906372" duration="7759000" />
+      <workItem from="1678965092044" duration="4926000" />
+      <workItem from="1679410072141" duration="8477000" />
+      <workItem from="1679419284425" duration="2224000" />
+      <workItem from="1680166946430" duration="2198000" />
+      <workItem from="1681378219071" duration="5584000" />
+      <workItem from="1682430398866" duration="9489000" />
+      <workItem from="1683035495051" duration="6338000" />
+      <workItem from="1683643708774" duration="7562000" />
+      <workItem from="1684257102014" duration="3996000" />
+      <workItem from="1684314615917" duration="5615000" />
+      <workItem from="1684856630115" duration="632000" />
+      <workItem from="1684859584074" duration="81000" />
+      <workItem from="1684859666146" duration="2702000" />
+      <workItem from="1684923775751" duration="5609000" />
+      <workItem from="1685012015803" duration="768000" />
+      <workItem from="1685457236434" duration="7122000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

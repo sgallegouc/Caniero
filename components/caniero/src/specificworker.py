@@ -84,6 +84,11 @@ class SpecificWorker(GenericWorker):
         except Ice.Exception as e:
             print(str(e) + " Error connecting with Kinova Arm")
 
+        try:
+            self.kinovaarm_proxy.stopGripper()
+        except Ice.Exception as e:
+            print(str(e) + " Error stop")
+
         if self.estadoMaquina == "encarar":
             if cup is not None:
                 self.encarar(cup)
@@ -94,6 +99,8 @@ class SpecificWorker(GenericWorker):
             self.inicioUltimoEmpujon()
         elif self.estadoMaquina == "ultimoEmpujon":
             self.ultimoEmpujon()
+        elif self.estadoMaquina == "acabarUltimoEmpujon":
+            self.acabarUltimoEmpujon()
         elif self.estadoMaquina == "empezarGripper":
             self.empezarGripper()
         # elif cup is not None:
@@ -126,10 +133,9 @@ class SpecificWorker(GenericWorker):
         cv2.imshow("top", color)
         cv2.waitKey(5)
 
-        #draw_objects_on_2dview(objects, RoboCompYoloObjects.TBox())
+        # draw_objects_on_2dview(objects, RoboCompYoloObjects.TBox())
 
     def encarar(self, box):
-
         # print(box.x, box.z)
         # condición de salida
         if abs(box.x) < 2 and abs(box.z) < 25:
@@ -159,7 +165,6 @@ class SpecificWorker(GenericWorker):
             print(str(e) + " Error connecting with Kinova Arm")
 
     def aproximar(self,box):
-
         # condición de salida
         if abs(box.y) < 190:
             self.estadoMaquina = "inicioUltimoEmpujon"
@@ -183,10 +188,9 @@ class SpecificWorker(GenericWorker):
             print(str(e) + " Error connecting with Kinova Arm")
 
     def inicioUltimoEmpujon(self):
-
         new_pose = self.current_pose
         self.aux_pose = self.current_pose.y
-        new_pose.y += -100
+        new_pose.y += -90
         self.estadoMaquina = "ultimoEmpujon"
 
         try:
@@ -195,30 +199,31 @@ class SpecificWorker(GenericWorker):
             print(str(e) + " Error connecting with Kinova Arm")
 
     def ultimoEmpujon(self):
-
-        if abs(self.aux_pose - 89) > abs(self.current_pose.y) < abs(self.aux_pose - 91):
-            print("HeECHO")
-            self.estadoMaquina = "empezarGripper"
+        if abs(self.aux_pose - 79) > abs(self.current_pose.y) < abs(self.aux_pose - 81):
+            self.tEspera = time.time()
+            self.estadoMaquina = "acabarUltimoEmpujon"
         else:
             try:
                 self.kinovaarm_proxy.setCenterOfTool(self.aux_pose - 90, RoboCompKinovaArm.ArmJoints.base)
             except Ice.Exception as e:
                 print(str(e) + " Error connecting with Kinova Arm")
 
-    def empezarGripper(self):
+    def acabarUltimoEmpujon(self):
+        tActual = time.time() - 1 - self.tEspera
+        if tActual > 2:
+            self.estadoMaquina = "empezarGripper"
 
+    def empezarGripper(self):
         gripper = self.kinovaarm_proxy.getGripperState()
         self.kinovaarm_proxy.closeGripper()
-        print("gripper distance: " + str(gripper.distance))
-        # print(gripper.lforce)
-        # print(gripper.rforce)
+        print("gripper distance: " + str(gripper.opening))
 
-        if gripper.distance < 0.376:
+        if gripper.opening > 190:
+            self.kinovaarm_proxy.stopGripper()
             self.aux_pose = self.current_pose.z
             self.estadoMaquina = "acabarGripper"
 
     def acabarGripper(self):
-
         new_pose = self.current_pose
         new_pose.z += 75
 
@@ -231,7 +236,6 @@ class SpecificWorker(GenericWorker):
                 print(str(e) + " Error connecting with Kinova Arm")
 
     def empezarDepositar(self):
-
         new_pose = self.current_pose
         self.aux_pose = self.current_pose.y
         new_pose.y += 150
@@ -239,7 +243,6 @@ class SpecificWorker(GenericWorker):
         self.estadoMaquina = "acabarDepositar"
 
     def acabarDepositar(self):
-        print("HELLO")
         print(self.aux_pose)
         print(self.current_pose.y)
         if (self.aux_pose + 150) < self.current_pose.y:
@@ -296,12 +299,12 @@ class SpecificWorker(GenericWorker):
 
     def devolver(self):
         try:
-            print("HOLA TIO ESTAS EN DEVOLVER")
             new_pose = self.current_pose
             new_pose.x = 400
             new_pose.y = -600
             new_pose.z = 20
             self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
+            self.tEspera = time.time()
             self.estadoMaquina = "acabado"
         except Ice.Exception as e:
             print(str(e) + " Error connecting with Kinova Arm")
@@ -310,13 +313,12 @@ class SpecificWorker(GenericWorker):
         try:
             new_pose = self.current_pose
             new_pose.y = -400
-            print("posicion x:", self.current_pose.x)
-            print("posicion Y:", self.current_pose.y)
-            print("posicion z:", self.current_pose.z)
-            if self.current_pose.x > 398 and abs(self.current_pose.y) > 398 and self.current_pose.z < 21:
+            tActual = time.time() - 1 - self.tEspera
+            if tActual > 3:
                 self.kinovaarm_proxy.openGripper()
-                self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
-                self.estadoMaquina = "fin"
+                if self.current_pose.x > 398 and abs(self.current_pose.y) > 398 and self.current_pose.z < 21:
+                    self.kinovaarm_proxy.setCenterOfTool(new_pose, RoboCompKinovaArm.ArmJoints.base)
+                    self.estadoMaquina = "fin"
         except Ice.Exception as e:
             print(str(e) + " Error connecting with Kinova Arm")
 
@@ -332,6 +334,9 @@ class SpecificWorker(GenericWorker):
         return box
 
     def read_camera(self, camera_name):
+        color = []
+        depth = []
+        all = []
         try:
             all = self.camerargbdsimple_proxy.getAll(camera_name)
             color = np.frombuffer(all.image.image, np.uint8).reshape(all.image.height, all.image.width, all.image.depth)
